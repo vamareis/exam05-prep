@@ -49,3 +49,20 @@ $> echo 'dxss' | ./a.out 3 3 2 | cat -e
  0 $
  0 $
  0 $
+
+ Rules
+For a space that is populated:
+Examples
+Each cell with one or no neighbors dies, as if by solitude.
+
+
+Each cell with four or more neighbors dies, as if by overpopulation.
+
+
+Each cell with two or three neighbors survives.
+
+
+For a space that is empty or unpopulated:
+Each cell with three neighbors becomes populated.
+
+
