@@ -93,11 +93,18 @@ Map*	bsq_solver(Map *map)
 				int_map[i][j] = min3(int_map[i - 1][j], int_map[i][j - 1], int_map[i - 1][j - 1]) + 1;
 			if (int_map[i][j] > max_size)
 			{
-				max_size = int_map[i][j];
-				best_i = i;
-				best_j = j;
+				if (i > 0 && j > 0 && int_map[i][j - 1] == int_map[i][j] - 1 && int_map[i - 1][j] == int_map[i][j] - 1)
+				{
+					max_size = int_map[i][j];
+					best_i = i;
+					best_j = j;
+				}
+				else if (i == 0 || j == 0)
+					max_size = int_map[i][j];
 			}
+			/* printf("%d", int_map[i][j]); */
 		}
+		/* printf("\n"); */
 	}
 	int	start_i = best_i - max_size + 1;
 	int	start_j = best_j - max_size + 1;
