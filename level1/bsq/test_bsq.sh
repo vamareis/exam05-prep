@@ -12,11 +12,12 @@ BSQ_EXEC="./a.out"
 # Colors
 GREEN='\033[0;32m'
 RED='\033[0;31m'
+YELLOW='\033[1;33m'
 NC='\033[0m'
 
 # Create test maps and expected outputs
 create_tests() {
-    ## --- Original Core Tests ---
+    ## --- Core Tests ---
     echo "5 . o x
 .....
 .....
@@ -112,83 +113,107 @@ xxxxxx
 xxxxxx
 xxxxxx" > "$EXPECTED_DIR/map11_big_square"
 
-
-    ## --- NEW Edge Case Tests ---
-
-    # Map 12: Missing characters in first line
     echo "3 . o
 .....
 .....
 ....." > "$TEST_DIR/map12_missing_char_in_first_line"
     echo "map error" > "$EXPECTED_DIR/map12_missing_char_in_first_line"
 
-    # Map 13: Duplicate characters in first line
     echo "3 . o o
 .....
 .....
 ....." > "$TEST_DIR/map13_duplicate_char_in_first_line"
     echo "map error" > "$EXPECTED_DIR/map13_duplicate_char_in_first_line"
 
-    # Map 14: No line break at the end
     echo -n "3 . o x
 .....
 .....
 ....." > "$TEST_DIR/map14_missing_linebreak"
     echo "map error" > "$EXPECTED_DIR/map14_missing_linebreak"
 
-    # Map 15: Valid map using numbers as characters
     echo "3 1 2 3
 111
 121
 111" > "$TEST_DIR/map15_numbers_as_chars"
-echo "311
+    echo "311
 121
 111" > "$EXPECTED_DIR/map15_numbers_as_chars"
 
-    # Map 16: Invalid map using character not in first line
     echo "3 . o x
 .....
 ..p..
 ....." > "$TEST_DIR/map16_forbidden_character"
     echo "map error" > "$EXPECTED_DIR/map16_forbidden_character"
 
-    # Map 17: All lines not same length (trailing space)
     echo "3 . o x
 .....
-.... 
+....
 ....." > "$TEST_DIR/map17_trailing_space_in_line"
     echo "map error" > "$EXPECTED_DIR/map17_trailing_space_in_line"
 
-    # Map 18: Valid map with special printable characters
     echo "3 @ # $
 @@@
 @#@
 @@@" > "$TEST_DIR/map18_special_printable_chars"
-
-echo "\$@@
+    echo "\$@@
 @#@
 @@@" > "$EXPECTED_DIR/map18_special_printable_chars"
+
+    echo "9 . o x
+...........................
+....o......................
+............o..............
+.........................o.
+....o....o........o........
+......o....o...o...........
+...........................
+......o..............o.....
+..o.......o................" > "$TEST_DIR/map19_full_integration"
+    echo "...................xxxxxx..
+....o..............xxxxxx..
+............o......xxxxxx..
+...................xxxxxxo.
+....o....o........oxxxxxx..
+......o....o...o...xxxxxx..
+...........................
+......o..............o.....
+..o.......o................" > "$EXPECTED_DIR/map19_full_integration"
+
+    echo "9 . o x
+...........................
+....o......................
+............o..............
+...........................
+....o......................
+.........o.....o...........
+...........................
+......o..............o.....
+..o.......o................" > "$TEST_DIR/map20_full_integration_2"
+    echo "................xxxxxxx....
+....o...........xxxxxxx....
+............o...xxxxxxx....
+................xxxxxxx....
+....o...........xxxxxxx....
+.........o.....oxxxxxxx....
+................xxxxxxx....
+......o..............o.....
+..o.......o................" > "$EXPECTED_DIR/map20_full_integration_2"
 }
 
-# Run tests
 run_tests() {
     echo "=== Running bsq tests (with Valgrind) ==="
     for map in $(ls "$TEST_DIR" | sort); do
         base=$(basename "$map")
         echo -n ">>> Testing: $base ... "
 
-        # Temporary files
         ACTUAL_OUT=$(mktemp)
         VALGRIND_OUT=$(mktemp)
 
-        # Run with Valgrind
         valgrind --leak-check=full --error-exitcode=1 --log-file="$VALGRIND_OUT" $BSQ_EXEC "$TEST_DIR/$base" > "$ACTUAL_OUT" 2>&1
 
-        # Check functional correctness
         diff -q "$ACTUAL_OUT" "$EXPECTED_DIR/$base" > /dev/null
         DIFF_RESULT=$?
 
-        # Check for leaks
         LEAK_LINE=$(grep "in use at exit" "$VALGRIND_OUT")
         if echo "$LEAK_LINE" | grep -q "0 bytes in 0 blocks"; then
             LEAK_RESULT=0
@@ -196,7 +221,6 @@ run_tests() {
             LEAK_RESULT=1
         fi
 
-        # Print results
         if [ $DIFF_RESULT -eq 0 ] && [ $LEAK_RESULT -eq 0 ]; then
             echo -e "${GREEN}✅ PASS${NC}"
         elif [ $DIFF_RESULT -ne 0 ]; then
@@ -210,11 +234,9 @@ run_tests() {
             echo "$LEAK_LINE"
         fi
 
-        # Cleanup
         rm "$ACTUAL_OUT" "$VALGRIND_OUT"
     done
 }
 
-# Main
 create_tests
 run_tests
